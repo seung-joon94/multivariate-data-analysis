@@ -1,0 +1,138 @@
+---
+title: "MVAhw1"
+output:
+  pdf_document: default
+  html_document: default
+---
+#####2014150236 경제학과 박승준
+
+###Q1.
+####data generation
+```{r}
+data <- read.table("DATA/Ch02/EDUC_SCORES.txt")
+data
+rownames(data) = data[,1]
+data=data[,-1]
+colnames(data)= c("Language", "Analogical", "Geomateric", "Sex")
+data
+```
+
+####a.
+```{r}
+temp=c(25,25,50)
+w=temp/sqrt(c(crossprod(temp,temp)))
+w
+```
+
+####b.
+```{r}
+x <- as.matrix(data[,-4])
+z1=x%*%w
+z2 = scale(x)%*%w
+cbind(z1,z2)
+data.frame(cbind(z1,z2))
+```
+
+####c.
+```{r}
+cbind(z1=z1[c(3,4), ], z2 = z2[c(3,4)])
+```
+##### Z1과 Z2모두 C학생의 score가 더 높다.
+
+###Q2.
+####data generation
+```{r}
+#--datageneration
+data_sex1 =as.matrix(data[data[,4] == 1, -4])
+data_sex0 =as.matrix(data[data[,4] == 0, -4])
+```
+
+####a.
+```{r}
+means_sex1 = apply(data_sex1, MARGIN =2, FUN = mean)
+means_sex0 = apply(data_sex0, MARGIN =2, FUN = mean)
+rbind(means_sex1, means_sex0)
+```
+
+####b.
+```{r}
+n= nrow(data)
+xd_sex1 = t(t(data_sex1) -means_sex1) ## male
+xd_sex0 = t(t(data_sex0) -means_sex0) ##female
+
+s_sex1 = 1/(n-1)*t(xd_sex1)%*%xd_sex1
+s_sex0 = 1/(n-1)*t(xd_sex0)%*%xd_sex0
+cat("sex = 1/n"); s_sex1
+cat("sex =0/n") ; s_sex0
+```
+#####남학생들은V3 과목의 variance가 크게 나타난 반면 여학생은 2과목의 variance가 크게 나타남. 또한 남학생들은 1과목과 3과목의 covariance가 다소 크게 나타났으며 1과목과 2과목의 covariance가 크게 나타남
+
+###Q3.
+####data generation
+```{r}
+data = as.matrix(read.table("DATA/Ch02/RANDOM_1.txt"))
+apply(data, 2, mean)
+apply(data, 2, var)
+
+n=nrow(data)
+w=c(0.8,0.6)
+x4=data[,c(1,2)]%*%w
+x5=data[,c(1,3)]%*%w
+x =cbind(x4,x5)
+
+W=matrix(c(0.866,0.5,-0.5,0.866),2,2)
+W
+det(W)
+Z=x%*%W ## Z already mean_centered
+```
+####a.
+```{r}
+plot(Z[,1],Z[,2], pch = 16)
+abline(v=0, h=0)
+```
+
+
+####b.
+```{r}
+cov_Z = 1/(n-1)*t(Z)%*%Z
+cov_Z
+```
+
+
+
+####c.
+```{r}
+cov_X= 1/(n-1)*t(x)%*%x
+cov_X
+cbind(cbind(cov_x=det(cov_X),cbind(cov_z=det(cov_Z))))
+```
+
+
+###Q4.
+####data generation
+```{r}
+X=data[,1:2]
+w=matrix(c(0.866,0.5,0.5,0.866),nrow= 2)
+det(w)
+Z=X%*%w
+```
+####a.
+```{r}
+plot(Z[,1], Z[,2],pch=16)
+abline(h=0, v=0)
+```
+
+
+####b.
+```{r}
+cov_z = (1/(n-1))*t(Z)%*%Z
+cov_z
+```
+
+####c.
+```{r}
+cov_X= 1/(n-1)*t(X)%*%X
+cov_X
+cbind(cbind(cov_x=det(cov_X)),cbind(cov_z=det(cov_Z)))
+```
+
