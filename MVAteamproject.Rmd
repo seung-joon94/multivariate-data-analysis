@@ -1,0 +1,413 @@
+---
+title: "Multivariate team project_ code"
+author: "team"
+date: "2019.6.6"
+output: 
+  html_document: 
+    highlight: textmate
+    theme: journal
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+churnrate <- read.csv("C:/Users/승준/Documents/통계R관련/KAGGLE/Telecom_customer churn.csv")
+churn2 <- na.omit(churnrate)
+# select variables
+churndata <- churn2[, c(1:3,5:8,10:11,24,26:27,29:30,38:39,42:43,49:50,99)]
+
+library("tools")
+library("HSAUR2")
+library("MVA")
+library("RColorBrewer")
+library("VGAM")
+library("MASS")
+library("ggplot2")
+library("tidyverse") 
+library("Hmisc")
+library("funModeling")
+library("polycor")
+```
+
+
+ For the analysis, Principle Compenents Analysis (PCA) are chosen for dimension reduction as there are many variables which are complex. In order to do PCA, transform the original variables to the linear combination of these variables which are independent.
+
+
+
+
+1. Exloratory Data Analysis (EDA)
+
+
+Step1 - First approach to data
+
+
+Number of observations (rows) and variables, and a head of the first cases.
+
+```{r}
+glimpse(churndata)
+```
+
+
+
+
+```{r}
+describe(churndata)
+```
+
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = rev_Mean,color=churn))+
+  facet_wrap(~churn)
+```
+
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_Mean,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = totmrc_Mean,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = ovrmou_Mean,color=churn))+
+  facet_wrap(~churn)
+
+```
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = vceovr_Mean,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = datovr_Mean,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = change_mou,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = change_rev,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = custcare_Mean,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = cc_mou_Mean,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = inonemin_Mean,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_cvce_Mean ,color=churn))+
+  facet_wrap(~churn)
+
+```
+
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_cdat_Mean ,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_peav_Mean ,color=churn))+
+  facet_wrap(~churn)
+```
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_pead_Mean ,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_opkv_Mean ,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = mou_opkd_Mean ,color=churn))+
+  facet_wrap(~churn)
+```
+
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = months ,color=churn))+
+  facet_wrap(~churn)
+```
+
+```{r}
+ggplot(data=churndata)+
+  geom_density(mapping = aes(x = eqpdays ,color=churn))+
+  facet_wrap(~churn)
+```
+considering the distribution of the variables by separating the churn group and the notchurn group, their distributions are very similar on the aspect of shape(kurtosis looks slightly different).
+
+
+point-biserial_correlation(correlation between binary data and continuous(ordinal) data)
+```{r}
+##biserial correlation
+library(polycor)
+
+polyserial(churndata$rev_Mean,churndata$churn)
+polyserial(churndata$mou_Mean,churndata$churn)
+polyserial(churndata$totmrc_Mean,churndata$churn)
+polyserial(churndata$ovrmou_Mean,churndata$churn)
+polyserial(churndata$ovrrev_Mean,churndata$churn)
+polyserial(churndata$vceovr_Mean,churndata$churn)
+polyserial(churndata$datovr_Mean,churndata$churn)
+polyserial(churndata$change_mou,churndata$churn)
+polyserial(churndata$change_rev,churndata$churn)
+polyserial(churndata$custcare_Mean,churndata$churn)
+polyserial(churndata$cc_mou_Mean,churndata$churn)
+polyserial(churndata$inonemin_Mean,churndata$churn)
+polyserial(churndata$mou_cvce_Mean,churndata$churn)
+polyserial(churndata$mou_cdat_Mean,churndata$churn)
+polyserial(churndata$mou_peav_Mean,churndata$churn)
+polyserial(churndata$mou_pead_Mean,churndata$churn)
+polyserial(churndata$mou_opkv_Mean,churndata$churn)
+polyserial(churndata$mou_opkd_Mean,churndata$churn)
+polyserial(churndata$months,churndata$churn)
+polyserial(churndata$eqpdays,churndata$churn) 
+```
+correlations between each predictor and response variable are very close to 0
+
+
+2. Doing PCA
+
+
+
+```{r}
+#####################
+
+# PCA -  with churn12 stepwise
+pca.churn <- prcomp(churndata[,-19], scale.=T, retx = T) # with stepwise
+summary(pca.churn) # Cumulative Proportion by first two PC = 50.37%, PC3 = 63.67%
+```
+
+cumulative proportion by first two PCs is 47.67% and by first three PCs is 57.85%.
+
+
+
+
+
+
+Now, we check screeplot to see how many components to retain.
+
+
+```{r}
+# check screeplot to see how many components to retain
+screeplot(pca.churn, type="lines", main="Scree Plot", npc=10)
+abline(h = 1, col = "red")
+## 
+```
+
+
+It seems appropriate to retain first six PCs following Kaiser's Rule.
+
+
+
+
+
+To calculate the proportion of each variables that are explained by the first six PCs
+
+
+```{r}
+# check the loading
+loading <- pca.churn$rotation %*% diag(pca.churn$sdev)
+
+# check the proportion of each variables that are explained by the first 3 PCs
+apply(loading[, 1:6]^2, 1, sum)
+
+```
+
+
+Excpet inonemin_Mean, datovr_Mean more than 41.38% variance of each variables can be explained by first six PCs.
+
+
+
+
+
+
+
+Principal component factor loading plot
+
+```{r}
+## Do a factor loading plot
+par(mfrow=c(1,1))
+plot(loading[,1], loading[,2], xlab="PCA 1", ylab="PCA 2",
+     type="n", xlim=c(-0.9,0.9), ylim=c(-1,1), main = "PC factor loading plot") 
+arrows(0,0, loading[,1], loading[,2], length=0.1,
+       angle=20, col="red")
+text(loading[,1]*1.1, loading[,2]*1.1, names(churndata[,-19]), col="black", cex=0.7)
+```
+
+(Here)
+In factor loading plot, change_mou and change_rev are negatively loaded in PC2 and month is loaded in PC1 negatively. except these 3 variables, are loaded in PC1 
+
+
+
+
+
+Furthermore, to make interpretation for each PCs more easier, draw heatmap for loadings.
+
+```{r}
+
+#### Heat map for PCA
+PC1 <- pca.churn$rotation[,1]
+PC2 <- pca.churn$rotation[,2]
+PC3 <- pca.churn$rotation[,3]
+PC4 <- pca.churn$rotation[,4]
+PC5 <- pca.churn$rotation[,5]
+PC6 <- pca.churn$rotation[,6]
+
+
+data_heatmap <- data.frame(variable=rep(colnames(churndata[,-19]),6),
+                           PC=rep(c("PC1", "PC2","PC3","PC4", "PC5","PC6"), each=ncol(churndata[,-19])),
+                           coef=c(PC1, PC2, PC3,PC4, PC5, PC6))
+ggplot(data_heatmap, aes(PC, variable)) +
+  geom_tile(aes(fill = coef)) +
+  scale_fill_gradientn(colors = rev(brewer.pal(5, "RdBu"))) +
+  scale_y_discrete(limits = rev(unique(data_heatmap$variable))) +
+  geom_text(aes(label = round(coef, 2))) +
+  ggtitle("Heatmap of Principal Components") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.text.x = element_text(angle = 90),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+
+```
+
+The heatmap can visualize more clear than PC factor loading plot.
+
+This plot shows several significant points as 1) mou_cdat_Mean, mou_pead_Mean, mou_opkd_Mean are strongly loaded in PC2. 2) ovrmou_Mean, ovrrev_Mean, vceovr_Mean are positivley loaded in PC1 and PC2. 3) custcare_Mean and cc_mous_Mean are negatively loaed in PC3 and positively loaed in PC6. 4) change_mus and change_rev are positively loaeded in PC4. 5) months and eqpdays has opposite relationship in PC5 and PC6. 
+
+We can interpret an observation with high 6th PC scores as the ovservation with high custcare_Mean, cc_mou_Mean, months and eqpdays. and we can also interpret other factor scores in the same way.  
+
+
+
+Finally, we do generalized linear regression analysis with first six PC loadings to see which PCs are significant for explaining whether the customer churns or not.
+
+
+```{r}
+
+# doing regression with PCs
+
+pcalogi=glm(formula = churndata[,19] ~ pca.churn$x[,1:6], family = binomial("logit"))
+summary(pcalogi)
+
+```
+
+In the results, all six PCs except PC2 are significant under 5% significance level.
+
+
+
+<P style="page-break-before: always">
+\newpage
+
+
+
+
+3. Comparison with EFA
+
+Next, we do EFA with the number of factors which is decided by PCA.
+To interpret the factor loading easily, we choose orthogonal rotation which simplifies factor loadings.
+
+
+```{r}
+####### EFA ########
+#make correlation mat
+cormat <- cor(churndata[,-19])
+#### efa with varimax rotation( unable to optimize error --> use nstart option )
+efa <- factanal(covmat=cormat, factors = 6, rotation = "varimax", nstart=10)
+efa$loadings
+efa$uniquenesses
+```
+
+Factor loadings with more than 0.5 are regarded as loaded variables. Considering factor loadings, each factors can be named as below.
+
+Factor 1 (over usage of voice call): rev_Mean, ovrmou_Mean, ovrrev_Mean, vceovr_Mean
+Factor 2 (average usage of voice call): mou_Mean, mou_cvce_Mean, mou_peav_Mean, mou_opkv_Mean
+Factor 3 (average usage of data call): mou_cdat_Mean, mou_pead_Mean, mou_opkd_Mean
+Factor 4 (total monthly fee): totmrc_Mean
+Factor 5 (over usage of data call): datovr_Mean
+Factor 6 : -
+
+Using factor 1 ~ factor 5, 62.6% of total variables can be explained.
+
+
+Considering the uniqueness, over 50% of change_mou, change_rev, custcare_Mean, cc_mou_Mean, inonemin_Mean, months and eqpdays can be explained by these analysis.
+
+
+
+
+
+
+Logistic regression with factor scores, all factors are significant under 5% significance level.
+
+```{r}
+
+
+#### factor scores
+efaloadings <- as.matrix(efa$loadings)
+efadata <- as.matrix(churndata[,-19])
+efascores <- efadata%*%efaloadings
+scaledfs <- scale(efascores)
+
+####Logistic regression with factor scores
+factorlogi=glm(formula = churndata[,19]~scaledfs, family = binomial("logit"))
+summary(factorlogi)
+
+```
+
+```{r}
+anova(factorlogi,pcalogi)
+```
+
+In the results, all factors are significant under 5% significance level.
+
+Comparing logistc regression model with factor scores is better than that with PC scores. However, even model using factor scores is not fitted well since the unquiness of many variables is so high.
+
