@@ -1,0 +1,175 @@
+---
+title: "MVAhw2"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+####2014150236 경제학과 박승준
+
+###Q1.
+####data generation
+```{r}
+library(ggfortify)
+data= read.table("DATA/Ch04/GSP_SHARE.txt")
+rownames(data)=data[,1]
+data = as.matrix(data[,-1])
+head(data)
+```
+
+####a.
+```{r}
+pca=prcomp(data, retx=T, center=T, scale.=T)
+summary(pca)
+round(pca$sdev^2,3)
+#loading plot
+autoplot(pca, data= data, loadings = TRUE, loadings.label = T)
+#scores plot for first two pcs
+scores = pca$x##x= scores of PCs
+plot(scores[,1], scores[,2], pch= 3)
+abline(v=0, h=0)
+text(scores[,2]~scores[,1], labels = rownames(data), pos =2)
+```
+#####Principal component들의 Eigen vector를 살펴보고 이를 카이저룰에 따라서 선택하면 5개의 principal component를 고르게 된다. 그리고 이 5개의 principal component만을 가지고 전체 정보의 76.53%를 설명할 수 있다. 그리고 first two PC는 전체 정보의 42.09%를 설명할 수 있다. 또한 PC1과 PC2를 가지고 그린 loading plot과 PC1, PC2에 대한 observation들의 score plot을 살펴보면 AK와 WY는 굉장히 1번째 PC score가 높게 나오는데 이는 Variable 2, 3, 7, 9, 14에 해당하는 산업의 GDP 비중이 다른 주보다 이 두 주에서 높을 것이라고 예상할 수 있다. 
+
+####b.
+```{r}
+data= read.table("GSP_SHARE.txt")
+rownames(data)= data[,1]
+data = as.matrix(data[,-1])
+data2 = data[-c(2,50),]
+pca2=prcomp(data2, retx=T, center=T, scale.=T)
+round(pca2$sdev^2,3)
+autoplot(pca2, data=data2, loadings = TRUE, loadings.label = T)
+scores2 = pca2$x
+plot(scores2[,1], scores2[,2], pch=3)
+text(scores2[,2]~scores2[,1], labels= rownames(data2), pos=2)
+```
+#####AK와 WY를 outlier로 생각하고 제거한 후에 시행한 PCA에서 Principal component들의 Eigen vector를 살펴보고 이를 카이저룰에 따라서 선택하면 5개의 principal component를 고르게 된다. 그리고 이 5개의 principal component를 가지고 전체 정보의 75.12%를 설명할 수 있다. First PC score가 높게 나타났던 AK와 WY가 제외되자 1번째 PC의 eigen value가 줄어든 것을 확인할 수 있었으며,  First 2 PC는 41.38%를 설명하게 된다. 또한 1st PC에 로딩된 변수들이 2,3,4,7,9,11,14 등으로 기존 AK와 WY가 포함되어 있을 때 보다 더 늘어난 것을 확인할 수 있다.
+
+###Q2.
+
+####data generation&PCA
+```{r}
+data= data.matrix(read.table('DATA/Ch04/GOVERNMENT_1.txt', fill =T, col.names = paste("x", 1:6)))
+data[upper.tri(data)]=t(data)[upper.tri(data)]
+```
+####a.
+```{r}
+pca= princomp(covmat = data)
+summary(pca)
+var = eigen(data)$values
+(pca$sdev)^2
+plot(var, type="b", main= "scree PLOT", xlab="Factors", ylab="eigenvalues")
+abline(h=1, col= "red")
+```
+
+#####Correlation matrix를 이용해 principal component의 variance를 구하면 Kaiser’s rule에 의해 first two principal component만 선택하게 되며 이 두개의 PC는 각각 전체 variance 중 43.889%, 20.44%를 설명한다. 따라서 이 두 개의 PC를 이용해서 전체 정보의 64.33%를 설명할 수 있다. 
+
+###Q3.
+####data generation
+```{r}
+##4.5
+data = read.table("IRIS.txt")
+colnames(data)= c("species", "sepal length", "sepal width", "petal length", "petal width" )
+data$species =as.factor(data$species) ##categrical variables
+data
+```
+
+####a.
+```{r}
+pairs(data[,2:5], pch=20)
+
+#pca
+pca = prcomp(data[,2:5], retx=T, center=T, scale.=T)
+summary(pca)
+#loading plot for first 2 pcs
+autoplot(pca, data = data, colour = 'species', loadings =TRUE, loadings.label= TRUE)
+```
+
+######일단 categorical variable인 species를 제외하고 나머지 continuous variable들을 가지고 pairwise scatter plot을 그려보면 변수 간에 어떠한 correlation이 있는 것 같아 보이므로 PCA를 수행한다. PCA를 바탕으로 살펴보면 Kaiser’s rule을 이용하면 1개의 PC를 선택하게 되고 이 1개의 PC로 72.96%의 변화를 설명할 수 있으나 loading plot 상에서 sepal width는 PC 1만으로는 설명하기가 어려워 보이는 것을 알 수 있다. 따라서 이를 cover하기 위해서 2개의 PC를 선택하면 전체 정보의 95.81%를 이 2개의 PC로 설명할 수 있게 된다. 
+
+####b.
+```{r}
+scores = as.data.frame(cbind(species = data[,1], pca$x))
+scores = aggregate(scores[,2:5], list(scores$species), FUN = mean)
+scores$Group.1 = as.factor(scores$Group.1)
+attach(scores)
+plot(PC1, PC2, col= c("red", "blue", "green")[Group.1], pch= 16, xlim = c(-2.5,2), ylim = c(-2.5,2))
+abline(v=0, h=0)
+legend(x = "topright", legend = c("setosa", "versicolor", "virginica"), col=c("red", "blue","green"), pch = 16)
+```
+
+#####Average principal component를 가지고 세 종류의 iris를 비교하면 virginica와 versicolor는 pc1 score가 2에 가까우며 이는 이 두 종의 평균을 살펴보면 PC1에 link되어 있는 petal width, petal length, sepal length가 전체 평균보다 크다는 것을 의미한다. 
+
+###Q4.
+####data generation
+```{r}
+data =data.matrix(read.table('vocations.txt', fill = T, col.names = paste("X", 1:22)))
+data[upper.tri(data)]=t(data)[upper.tri(data)]
+```
+####a.
+```{r}
+pca=princomp(covmat = data)
+summary(pca)
+
+##scree plot
+screeplot(pca, type = "line", main="screeplot for vocations", pch = 16, npc=22 )
+abline(h=1, col ="red")
+##loading plot
+loadings=pca$loadings
+loadings
+```
+#####카이저 룰에 따라 6개의 PC를 선택하면 이 6개의 PC를 이용해 전체 정보의 73.11%를 설명할 수 있게 된다.
+
+###Q5.
+####data generation
+```{r}
+data=read.table("DATA/Ch04/RECORDS.txt")
+rownames(data)=data[,1]
+data=data[,-1]
+colnames(data)=paste('V',1:8)
+data
+```
+
+####a,b
+```{r}
+pca= prcomp(data, retx = T, center =T, scale. = T)
+summary(pca)
+```
+
+
+####c.
+```{r}
+screeplot(pca, type= "lines", main = "scree plot for records", pch=16 )
+abline(h=1, col ="red")
+##loading plot for 1st 2 pc
+autoplot(pca, loadings=TRUE, loadings.label = TRUE, pch= 16)
+```
+
+#####PCA를 구하고 카이저 룰에 따라 2개의 PC를 선택하면 이 2개의 PC를 통해 전체 정보의 88%를 설명할 수 있다. 또한 전반적으로 PCA1은 2번째 variable을 제외한 대부분의 variable과 관련이 높으며 pca2는 주로 V2를 설명하고 있다. 
+
+###Q6.
+####data generation
+```{r}
+data= data.matrix(read.table('DATA/Ch04/DRUG_USE.txt', fill = T, col.names = paste("X", 1:13)))
+data[upper.tri(data)] = t(data)[upper.tri(data)]
+data
+```
+
+####a.
+```{r}
+#pca
+pca= princomp(covmat = data)
+pca
+summary(pca)
+#scree plot
+screeplot(pca, type= "lines", ylim=c(0,5), main= "Scree plot for DRUGUSE", npc=13)
+abline(h=1, col ="red")
+
+##loading plot for 1st 2pc
+loadings = pca$loadings
+loadings
+```
+#####Pca를 분석하면 Kaiser’s rule에 따라 2개의 PC를 선택하게 되며 이 2개의 PC를 통해서 49.44%의 변화를 설명하게 된다. 때문에 설명량이 50%에 미치지 못하기 때문에 2개의 변수 혹의 3개의 PC를 선택하는 것이 합당하다. 50% 이상의 정보를 설명하기 위해서 3개의 PC를 선택하면 first 3PC는 전체 정보의 56.77%를 설명하게 된다. 
+#####Loading matrix를 보면 1번째 PC에 모든 변수가 상당히 많이 로딩되어 있음을 알 수 있다. 이는 하나의 PC로 전체 정보의 33% 이상을 설명할 수 있을 정도로 13개의 약물이라는 변수가 전체적으로 highly correlated되어 있음을 의미한다. 

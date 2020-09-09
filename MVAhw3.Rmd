@@ -1,0 +1,197 @@
+---
+title: "MVA HW2"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+##MVA HW3.
+###2014150236 경제학과 박승준
+
+###Q1.
+####data generation
+```{r}
+data=read.table('DATA/ch05/SIx_VARIABLES.txt')
+head(data)
+```
+####a.
+```{r}
+#--a
+pca=prcomp(data, scale.=T) 
+summary(pca)
+screeplot(pca, type="lines", main="screeplot for drug use" )
+abline(h=1, col="red")
+pca$sdev^2
+```
+
+#####EFA를 수행하기전 factor의 개수를 알기 위해 먼저 PCA시행하며 이때 데이터가 normalizing되어 있다고 가정할 수 없으므로 scaled해서수행한다. 2개 variable의 variance가 1이상이며 이 2개의 PC를 통해 전체의 78.7%를 설명 할 수 있다. 따라서 Kaiser's rule에 따라 2개의 factor, 혹은 elbow method에 따라 3개의 factor로 EFA를 진행해야 한다.
+
+####b.c.
+```{r}
+efa=factanal(data, factors =3)
+efa
+varsum=apply(efa$loadings^2, 2, sum) ;sum(varsum)/6
+communality= apply(efa$loadings^2, 1, sum) ;communality
+```
+#####efa를 계산하면 이 3개의 factor를 이용해 전체 information의 88.8%를 설명할 수 있으며 모든 variable 들이 다 잘 설명되고 있다고 볼 수 있다.
+##### 3개의 펙터들과 6개의 variable을 살펴보면 factor 1은 3,4 변수를 factor 2는 5,6변수를,그리고 factor3는 1,2, 변수를 잘 설명하고 있다.
+
+####d.
+```{r}
+#--d
+efa=factanal(data, factors=3, rotation = "varimax", scores='Bartlett')
+head(efa$scores,2)
+```
+#####1st obs와 2nd obs의 factor스코어를 비교하면 1st obs는 3번째 factor 스코어가 높고 2nd obs는 2번째 factor스코어가 가장 높다. 이는 1st obs는 1,2 변수가, 그리고 2nd obs는 5,6변수가 가장 크기 때문이라고 해석할 수 있다.
+
+
+###Q2.
+####Data generation
+```{r}
+#---data generation
+data_a = read.table("DATA/Ch05/Food_research_A.txt")
+head(data_a) 
+data_a=data_a[,-1]; head(data_a)
+data_a
+colnames(data_a)=paste('V',1:10)
+```
+
+####a.
+```{r}
+pca_a=prcomp(data_a,center=T, scale.=T) 
+summary(pca_a)
+screeplot(pca_a, type="lines",  main = "screeplot for Food_research_A", ylim= c(0,6), npc=10)
+abline(h=1, col="red")
+efa_a=factanal(data_a, factors=3, rotation="varimax")
+efa_a
+communality_a = apply(efa_a$loadings^2, MARGIN = 1, FUN = sum)
+round(communality_a,3)
+```
+#####먼저 PCA를 통해 factor의 개수를 결정하면 Kaiser's rule에 따라 3개의 factor를 선택하게 되며, PCA를 수행했을 때 이 3개의 PC를 통해 전체 information의 72.58%를 설명할 수 있다. 그리고 3개의 factor를 가지고 efa를 수행하면 factor1은 V3,4,7,10을 factor2는 V2,5,8을, factor3는 V1,9를 설명한다. 하지만 이때 variable 6는 어떤 factor로도 설명이 잘 되지 않으므로 factor를 더 추가해 V6를 설명해야 한다. 
+```{r}
+efa_a=factanal(data_a, factors=5, rotation="varimax")
+efa_a
+communality_a = apply(efa_a$loadings^2, MARGIN = 1, FUN = sum)
+round(communality_a,3)
+```
+#####5개의 factor를 이용했을 때 communality를 보면 V6의 communality는 0.995로 거의 대부분의 정보를 담있 이지만 V9의 communality가 0.5 이하로 떨어진 것을 확인할 있다. 그러나 0.499가 거의 0.5근접한 값임을 고려하면 모든 변수의 정보가 충분히 설명되었다고 볼 수 있다.
+
+####b.
+```{r}
+#data generation
+data_a = read.table("DATA/Ch05/Food_research_A.txt")
+data_a=data_a[,-1]; head(data_a)
+efa_a=factanal(data_a, factors=3, rotation="varimax")
+data_b =read.table("DATA/Ch05/Food_research_B.txt")
+data_b = data_b[,-1]
+colnames(data_b)=paste('v',1:10)
+#scree plot
+pca_b =prcomp(data_b, center=T, scale.=T)
+summary(pca_b)
+##scree plot
+screeplot(pca_b, type="lines", main="screeplot for Food_research_B", ylim=c(0,6), npc= 10)
+abline(h=1,col="red")
+##
+efa_b=factanal(data_b, factors=3, rotation="varimax")
+communality_a = apply(efa_a$loadings^2, MARGIN = 1, FUN = sum)
+communality_b=apply(efa_b$loadings^2, MARGIN = 1, FUN = sum)
+communality_b
+round(communality_b)
+communality_diff = round(rbind(communality_a, communality_b),3)
+communality_diff
+```
+#####B데이터가지고 PCA를 통해 3개의 팩터 개수를 선택하고 EFA를 수행한 후 A데이터의 communality와 B데이터의 communality를 비교하면 A데이터는 1번 변수의 communality가 낮고 9번 변수의 communality가 높은 반면 B는 1번 변수의 communality가 높고 V9의 communality가 낮다. 이는 B데이터의 researcher가 이 두 변수를 혼동하여 잘못 표했 해을 가능성이 있음을 의심할 만한 근거가 된다. 따라서 researcher에게 이에 대한 확인을 거친후 이 두 데이터를 합쳐서 조사를 수행하면 observation의 수를 늘림으로써 더 정확한 조사가 가능하다.
+
+###Q3.
+####data generation
+```{r}
+#--data generation
+data= read.table("DATA/Ch05/MBA_CAR_ATTRIB.txt")
+head(data)
+sum(data[,3:18]=='.')
+#check missing data
+
+##### my function ###
+missing=NA
+n=nrow(data)
+for(i in 1:n){
+   if (sum(data[i,3:18]=='.') >= 1)
+     missing=c(missing, i) #update missing row
+}
+missing=missing[-1]
+data[missing, 3:18]
+data=data[-missing,] # data w.o missng value n=294
+colnames(data)=c("student ID", "Car_ID", "Exciting", "Dependable", "Luxurious", " Outdoorsy", "Powerful","Stylish","Comfortable", "Rugged","Fun","Safe","Performance","Family","Versatile","Sports","Status","Practical")
+str(data)
+data[,c(7,10:18)] = sapply(c(7,10:18), FUN = function(x) as.integer(data[[x]]))
+##sapply: google search
+str(data)
+```
+#####데이터 상에 missing value가 존재해 결측값이 있는 obseravation을 제거 하고 분석을 수행한다.
+
+###screeplot
+```{r}
+pca=princomp(data[,3:18])
+summary(pca)
+screeplot(pca, type="lines" ,main="Screeplot for MBA_CAR", npc=16)
+abline(h=1, col="red")
+```
+#####EFA를 수행전 PCA를 수행하고 Kaiser's rule에 따라 factor의 개수를 3개로 결정함
+
+####a.
+```{r}
+efa=factanal(data[,3:18], factor=3, rotation="varimax", scores = "Bartlett")
+efa
+communality=apply(efa$loadings^2, MARGIN = 1, FUN = sum)
+round(communality,3)
+```
+
+#####EFA수행시 대부분 Variable의 communality가 0.5 이상으로 대체로 잘 설명되며 전체 정보의 66.6%를 설명하고 있다.factor loading matrix를 살펴보면 factor 1 에 exciting luxurious powerful stylish fun performance sports status, factor2에 dependable  comfortable safe family practical, factor 3에 outdoorsy versatilie rugged가 로딩되어 있으며 이를 바탕으로 볼 때 factor1은 high-class에 해당하는 속성들과 연관 깊고, factor2는 차량의 내구도, 안전과 관련된 속성들과 연관있으며 factor3는 offroad에 선호되는 속성들과 연관되어 있음을 알 수 있다. 따라서 factor1은 brand image facotor2는 durability factor3는 outdoor 정도로 볼 수 있다.
+
+####b.
+```{r}
+score=data.frame(cbind(Car_ID=data$Car_ID, efa$scores))
+score2=aggregate(score[,2:4],list(score$Car_ID), FUN = mean)
+score2$Group.1 = c("BMW","FORD", "iNFINITI", "JEEP","LEXUS","Chrysler","MERCEDES", "Saab", "Porche","Volvo")
+colnames(score2)[2:4] = c("Brand Image", "Durability", "Outdoor")
+score2
+par(mfrow=c(1,3))
+plot(score2[,3]~score2[,2], pch=16, xlim=c(-2,2), ylim=c(-2,2), xlab="Brand Image", ylab="Durability", data= score2, main="Factor score plot")
+abline(h =0, v=0)
+text(score2[,3]~score2[,2], labels=score2[1:10,1], pos =3)
+plot(score2[,2]~score2[,4], pch=16, xlim=c(-2,2), ylim=c(-2,2), xlab="outdoor", ylab="brand image", data= score2, main="Factor score plot")
+abline(h =0, v=0)
+text(score2[,2]~score2[,4], labels=score2[1:10,1],  pos = 3)
+plot(score2[,4]~score2[,3], pch=16, xlim=c(-2,2), ylim=c(-2,2), xlab="Durability", ylab="Outdoor", data= score2, main="Factor score plot")
+abline(h =0, v=0)
+text(score2[,4]~score2[,3], labels=score2[1:10,1],  pos = 3)
+```
+#####3개의 factor에 대해 2개씩 선택해 축으로 한 plot을 살펴보면 세 개의 scatter plot에서 전체적으로 동등한 위치에 있는 차들 예컨대 포드와 지프 등을 볼 수 있다. 때문에 전반적으로 포드와 지프는 유사한 모델이라고 할 수 있다.  또한 BMW, 벤츠는 브랜드 의미지, outdoor의 측면에서는 유사하다고 할 수 있으나 안정성의 측면에서 벤츠가 더 나은 평가를 받고 있다고 해석 할 수 있다. 
+
+###Q4.
+####data generation
+
+```{r}
+a=read.table("DATA/Ch05/EMOTIONS.txt", fill = T, col.names = paste("x", 1:10));
+is.matrix(a)
+data=data.matrix(a)
+colnames(data) = c('interest','joy','surprise','sadness','anger','disgust','contempt','fear','shame','guilt')
+rownames(data) = c('interest','joy','surprise','sadness','anger','disgust','contempt','fear','shame','guilt')
+data[upper.tri(data)] = t(data)[upper.tri(data)]
+pca=princomp(covmat=data)
+summary(pca)
+par(mfrow=c(1,1))
+screeplot(pca, type="lines", main = "screeplot for Emotions data", npc=10)
+abline(h=1, col="red")
+```
+#####이 데이터는 newly purchased car에 대한 owner들의 감정을 조사한 자료이다. 이를 바탕으로 EFA를 수행하기 전에 먼저 PCA를 통해 factor의 개수를 결정해야 하며 kaiser's rule에 따라 2개 혹은 elbow method에 따라 3개의 factor를 골라야 한다. 
+
+```{r}
+efa=factanal(covmat = data, factors=3, rotation="varimax")
+efa
+communality=apply(efa$loadings^2, MARGIN = 1, FUN = sum);
+round(communality,3)
+```
+
+#####EFA를 수행하기 전에 먼저 PCA를 통해 factor의 개수를 결정해야 하며 kaiser's rule에 따라 2개 혹은 elbow method에 따라 3개의 factor를 골라야 한다. varimax rotation EFA를 수행했을 때 factor1은 sadness anger disgust contempt fear, factor2는 fear shame factor3는 surprise 와 로딩되어 있다고 보인다. 하지만 communality를 확인하면 interest, joy 등 몇개의 변수를 잘 설명하지 못함을 확인 할 수 있다.  또한 이 각 변수들에 대해서 전문적인 지식이 없기 때문에  이러한 결과에 대한 의미 해석은 전문가가 아닌 입장에서는 다소 어렵다.

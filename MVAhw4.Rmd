@@ -1,0 +1,236 @@
+---
+title: "MVA4"
+output:
+  html_document: default
+  word_document: default
+---
+
+
+###8.2
+####data generation
+```{r}
+data(iris)
+head(iris)
+boxplot(iris[,1:4])
+```
+
+####a
+```{r}
+iris_1=subset(iris, Species == 'setosa')
+iris_2=subset(iris, Species == 'versicolor')
+iris_3=subset(iris, Species == 'virginica')
+par(mfrow=c(1,3), mar=c(6,3,2,1))
+boxplot(iris_1[,1:4], main= 'setosa', ylim=c(0,8),las=2)
+boxplot(iris_2[,1:4], main= 'versicolor', ylim=c(0,8),las=2)
+boxplot(iris_3[,1:4], main= 'virginica', ylim=c(0,8),las=2)
+```
+
+####b
+```{r}
+#standardizing for K-means
+iris2=cbind(scale(iris[,1:4]), iris[,5])
+boxplot(iris2[,1:4])
+#kmeans clustering
+par(mfrow=c(1,1))
+set.seed(1)
+x=iris2[,1:4]
+cluster82=kmeans(x, centers=3)
+clus=cbind(iris2[,5],x, cluster82$cluster)
+identi=table(clus[,1], clus[,6]); identi 
+sum(diag(identi))/sum(identi) 
+```
+
+###8.4
+####data generation
+```{r}
+data84<- read.table("DATA/Ch08/STORE_SHARE.txt")
+data84
+```
+
+####Deciding number of clusters
+```{r}
+nc=NbClust(data84, distance= 'euclidean', min.nc=2, max.nc=15, method="ward.D") #k=3
+nc
+```
+
+####Hclust
+```{r}
+d= dist(data84,"euclidean") ##dist mat
+h= hclust(d,"ward.D") ## clustering
+par(mfrow=c(1,1))
+plot(h)
+rect.hclust(h, k=3)
+```
+
+####Kmeans
+```{r}
+set.seed(12)
+withinss<-pseudof<-NULL
+for(i in 1:15){
+  n=nrow(data84)
+  km<-kmeans(data84, centers=i)
+  withinss<-c(withinss, km$tot.withinss)
+  f<-(km$betweenss/(i-1))/(km$tot.withinss/(n-i))
+  pseudof<-c(pseudof, f)
+}
+plot(pseudof, type='b')
+km=kmeans(data84, centers=4)
+km$cluster
+```
+
+###8.5
+####data generation
+```{r}
+Cmat=read.table('DATA/Ch08/SHOPPING.txt', row.names =1)
+colnames(Cmat)= rownames(Cmat)
+cmat2= as.dist(Cmat);cmat2
+```
+####hclust
+```{r}
+h=hclust(cmat2, method = 'ward.D')
+par(mfrow=c(1,1))
+plot(h)
+rect.hclust(h,k=3)
+```
+
+###8.8
+####data generation
+```{r}
+data88=read.table('DATA/Ch09/FACTBOOK.txt');head(data88)
+data88=data88[,2:6] # select needed columns
+colnames(data88) = c('PENET','pcycle','price','pvtsh','pur/hh')
+head(data88)
+```
+
+####a.
+####hclust
+```{r}
+d=dist(data88,'euclidean')
+h=hclust(d,method='ward.D')
+par(mfrow=c(1,1))
+plot(h)
+rect.hclust(h,k=2)
+```
+
+####kmeans
+```{r}
+n=nrow(data88)
+withinss<-pseudof<-NULL
+for(i in 1:15){
+  km<-kmeans(data88, centers=i)
+  withinss<-c(withinss, km$tot.withinss)
+  f<-(km$betweenss/(i-1))/(km$tot.withinss/(n-i))
+  pseudof<-c(pseudof, f)
+}
+plot(pseudof, type='b', main='Pseudo-f plot')
+km=kmeans(data88, centers=2)
+km$cluster
+```
+####(b)
+```{r}
+km=kmeans(data88,centers=2)
+plot(data88, col= km$cluster, pch= 19, main = "k=2")
+plot(data88[,c(1,2,5)], col =km$cluster, pch=19, main = "k=2")
+points(km$centers, col=km$cluster, pch=9, cex=4)
+#by looking at the scatterplot matri, the first(red) cluster
+km$centers
+```
+####c.
+
+###8.10
+####data generation
+```{r}
+data810=read.table('DATA/Ch08/COFFEE.txt', row.names= 1)
+head(data810)
+```
+
+####a.
+```{r}
+Fmat=matrix(0,nrow(data810),nrow(data810))
+Fmat
+ni=apply(data810, 1, sum)
+nj=apply(data810, 2, sum)
+n=sum(data810)
+for(i in 1:nrow(data810)){
+  for(j in 1:ncol(data810)){
+    Fmat[i,j] = data810[i,j]/(ni[i]*nj[j]/n)
+  }
+}
+Fmat
+Fmat=as.dist(Fmat)
+Fmat
+round(Fmat,3)
+```
+
+####b.
+```{r}
+h=hclust(Fmat,'ward.D')
+plot(h)
+par(mfrow=c(1,1))
+plot(h);rect.hclust(h,k=3)
+plot(h);rect.hclust(h,k=4)
+```
+
+##CH10.
+
+###10.1
+####a.
+#####
+####b.
+```{r}
+0.82*0.88*(0.43-0.29*0.26)
+```
+####c.
+```{r}
+gam= matrix(c(0.43,-0.29),1,2)
+phi=matrix(c(1,0.26,0.26,1),2,2)
+gam%*%phi%*%t(gam)
+```
+
+###10.3
+####data generation
+```{r}
+channels= read.table("DATA/Ch09/CHANNELS.txt")
+head(channels)
+channels= as.matrix(channels)
+var.name = c(paste0("Y",1:6), paste0("X",1:6))
+dimnames(channels) <- list(var.name,var.name)
+```
+
+```{r}
+model.channels() <- specifyModel()
+dissatisfaction -> Y1, NA, 1
+dissatisfaction -> Y2, lambda.y2, NA
+dissatisfaction -> Y3, lambda.y3, NA
+intention -> Y4, NA, 1
+intention -> Y5, lambda.y5, NA
+intention -> Y6, lambda.y6, NA
+cont.manufacturer -> X1, lambda.x1, NA
+cont.manufacturer -> X2, lambda.x2, NA
+cont.manufacturer -> X3, lambda.x3, NA
+cont.retailer -> X4, lambda.x4, NA
+cont.retailer -> X5, lambda.x5, NA
+cont.retailer -> X6, lambda.x6, NA
+cont.manufacturer -> dissatisfaction, gamma.11, NA
+cont.retailer -> dissatisfaction, gamma.21,NA
+cont.manufacturer <-> cont.manufacturer, NA, 1
+cont.retailer <-> cont.retailer, phi.12,NA
+dissatisfaction <-> dissatisfaction, zeta1, NA
+intention  <-> intention, zeta2, NA
+Y1 <-> Y1, theta.epsilon.11,NA
+Y2 <-> Y2, theta.epsilon.22,NA
+Y3 <-> Y3, theta.epsilon.33,NA
+Y4 <-> Y4, theta.epsilon.44,NA
+Y5 <-> Y5, theta.epsilon.55,NA
+Y6 <-> Y6, theta.epsilon.66,NA
+X1 <-> X1, theta.delta.11,NA
+X2 <-> X2, theta.delta.22,NA
+X3 <-> X3, theta.delta.33,NA
+X4 <-> X4, theta.delta.44,NA
+X5 <-> X5, theta.delta.55,NA
+X6 <-> X6, theta.delta.66,NA
+channels.fit<- sem(model.channels, S=channels,N=200)
+summary(channels.fit)
+pathDiagram(channels.fit, style="traditional", ignore.double=FALSE, error.nodes=TRUE, edge.label="values")
+```
+
